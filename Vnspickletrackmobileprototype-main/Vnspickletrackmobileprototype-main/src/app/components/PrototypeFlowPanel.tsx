@@ -26,6 +26,7 @@ export type Screen =
   | 'empty-states'
   /* Member / Student role screens */
   | 'member-dashboard' | 'member-profile' | 'member-schedule'
+  | 'member-court-booking'
   | 'member-package' | 'member-attendance-history' | 'member-payment-history'
   | 'member-renew-request' | 'member-session-warning' | 'member-contact'
   /* Documentation */

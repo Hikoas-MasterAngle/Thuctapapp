@@ -1,17 +1,23 @@
-/**
+﻿/**
  * MemberDashboard — VNS PickleTrack
- * Trang chủ Hội viên · Android 390 × 844
+ * Trang chủ Hội viên Â· Android 390 Ă— 844
  */
+import { useEffect, useState } from 'react';
 import {
   Bell, Calendar, Clock, MapPin, ChevronRight,
   TrendingUp, BookOpen, MessageCircle,
   RefreshCw, AlertTriangle, User, Award, Percent,
-  PauseCircle, XCircle
+  PauseCircle, XCircle, CalendarDays, Timer, BellRing, BadgeCheck
 } from 'lucide-react';
+import {
+  getBookingCountdown,
+  getBookingDateTimeLabel,
+  loadCourtBooking,
+} from './memberCourtBooking';
 
-/* ══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MOCK DATA
-══════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const MEMBER = {
   name:        'Nguyễn Văn A',
   initials:    'NA',
@@ -52,34 +58,43 @@ const STATUS_CFG = {
 function getSessionUrgency(n: number) {
   if (n === 0) return { color:'#E76F51', gradient:'linear-gradient(135deg,#C62828 0%,#E76F51 100%)', shadow:'rgba(231,111,81,0.40)', label:'Đã hết buổi!',       alertBg:'rgba(231,111,81,0.15)', alertBorder:'rgba(231,111,81,0.35)', alertColor:'#C85A3D' };
   if (n <= 2)  return { color:'#E76F51', gradient:'linear-gradient(135deg,#C62828 0%,#E76F51 100%)', shadow:'rgba(231,111,81,0.38)', label:'Sắp hết buổi',       alertBg:'rgba(231,111,81,0.12)', alertBorder:'rgba(231,111,81,0.30)', alertColor:'#C85A3D' };
-  if (n <= 5)  return { color:'#F4A261', gradient:'linear-gradient(135deg,#E76F51 0%,#F4A261 100%)', shadow:'rgba(244,162,97,0.35)', label:'Sắp hết — gia hạn sớm', alertBg:'rgba(244,162,97,0.12)', alertBorder:'rgba(244,162,97,0.30)', alertColor:'#9E5A00' };
+  if (n <= 5)  return { color:'#F4A261', gradient:'linear-gradient(135deg,#E76F51 0%,#F4A261 100%)', shadow:'rgba(244,162,97,0.35)', label:'Sáº¯p háº¿t — gia háº¡n sá»›m', alertBg:'rgba(244,162,97,0.12)', alertBorder:'rgba(244,162,97,0.30)', alertColor:'#9E5A00' };
   return               { color:'#2A9D8F', gradient:'linear-gradient(135deg,#0E7C7B 0%,#2A9D8F 100%)', shadow:'rgba(14,124,123,0.30)', label:'',                   alertBg:'', alertBorder:'', alertColor:'' };
 }
 
-/* ══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PROPS
-══════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 interface MemberDashboardProps {
   onNavigate:      (screen: string) => void;
   onNotification?: () => void;
 }
 
-/* ══════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    COMPONENT
-══════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardProps) {
+  const [liveNow, setLiveNow] = useState(() => new Date());
+  const [courtBooking] = useState(() => loadCourtBooking());
+  const [showMemberBenefits, setShowMemberBenefits] = useState(false);
   const urgency    = getSessionUrgency(MEMBER.remaining);
   const statusCfg  = STATUS_CFG[MEMBER.status];
-  const progress   = MEMBER.remaining / MEMBER.total;   // remaining / total (buổi còn lại)
+  const progress   = MEMBER.remaining / MEMBER.total;   // remaining / total (buổi cĂ²n láº¡i)
   const isLow      = MEMBER.remaining <= 5;
   const isCritical = MEMBER.remaining <= 2;
+  const bookingCountdown = courtBooking ? getBookingCountdown(courtBooking, liveNow) : null;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setLiveNow(new Date()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background:'#F0F4F5' }}>
 
-      {/* ════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HEADER
-      ════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div
         className="relative overflow-hidden flex-shrink-0"
         style={{ background:'linear-gradient(148deg,#032C2C 0%,#053E3E 30%,#075E5D 60%,#0E7C7B 85%,#1A8E87 100%)' }}
@@ -144,15 +159,15 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
         </div>
       </div>
 
-      {/* ════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           SCROLLABLE BODY
-      ════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="flex-1 overflow-y-auto pb-28">
         <div className="px-4 pt-4 space-y-4">
 
-          {/* ─────────────────────────────────────────
+          {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               MAIN CARD — Sessions remaining
-          ───────────────────────────────────────── */}
+          â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div
             className="rounded-3xl overflow-hidden"
             style={{
@@ -198,7 +213,7 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                   <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', fontWeight:600, marginTop:1 }}>buổi</p>
                 </div>
 
-                {/* "Sắp hết buổi" badge — only when ≤2 */}
+                {/* "Sắp hết buổi" badge — only when â‰¤2 */}
                 {isCritical && (
                   <div
                     className="ml-auto mb-2 flex items-center gap-1.5 px-3 py-2 rounded-xl"
@@ -249,9 +264,9 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
             )}
           </div>
 
-          {/* ─────────────────────────────────────────
+          {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               BUỔI HỌC TIẾP THEO
-          ───────────────────────────────────────── */}
+          â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <p style={{ fontSize:12, fontWeight:800, color:'#374151', letterSpacing:'0.04em' }}>
@@ -333,15 +348,114 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
             </div>
           </div>
 
-          {/* ─────────────────────────────────────────
+          {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               QUICK ACTIONS
-          ───────────────────────────────────────── */}
+          â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <button
+            onClick={() => onNavigate('member-court-booking')}
+            className="w-full bg-white rounded-3xl overflow-hidden text-left active:scale-[0.99] transition-all mb-4"
+            style={{
+              border: '1.5px solid rgba(14,124,123,0.15)',
+              boxShadow: '0 6px 22px rgba(14,124,123,0.08)',
+            }}
+          >
+            <div style={{ height: 3, background: 'linear-gradient(90deg,#0E7C7B 0%,#2A9D8F 100%)' }} />
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <p style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 800, letterSpacing: '0.04em' }}>
+                    ĐẶT SÂN HÔM NAY
+                  </p>
+                  <p style={{ fontSize: 16, fontWeight: 900, color: '#1F2933', marginTop: 2 }}>
+                    {courtBooking ? courtBooking.court : 'Chưa có sân nào được giữ chỗ'}
+                  </p>
+                  <p style={{ fontSize: 12, color: '#6B7280', fontWeight: 600, marginTop: 2, lineHeight: 1.45 }}>
+                    {courtBooking
+                      ? getBookingDateTimeLabel(courtBooking)
+                      : 'Chọn sân trống, giữ chỗ nhanh và đồng bộ với lịch học của bạn.'}
+                  </p>
+                </div>
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: courtBooking ? 'rgba(14,124,123,0.10)' : 'rgba(244,162,97,0.12)' }}
+                >
+                  <CalendarDays style={{ width: 20, height: 20, color: courtBooking ? '#0E7C7B' : '#E8832A' }} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 mb-3">
+                <div className="rounded-2xl px-3 py-3" style={{ background: 'rgba(14,124,123,0.06)' }}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Timer style={{ width: 12, height: 12, color: '#0E7C7B' }} />
+                    <span style={{ fontSize: 10, color: '#6B7280', fontWeight: 700 }}>Nhắc sân</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: '#0E7C7B', fontWeight: 900 }}>
+                    {courtBooking ? `TrÆ°á»›c ${courtBooking.reminderMinutes} phút` : 'Khi đặt sẽ bật'}
+                  </p>
+                </div>
+                <div className="rounded-2xl px-3 py-3" style={{ background: 'rgba(244,162,97,0.08)' }}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <BellRing style={{ width: 12, height: 12, color: '#E8832A' }} />
+                    <span style={{ fontSize: 10, color: '#6B7280', fontWeight: 700 }}>Trạng thái</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: '#E8832A', fontWeight: 900 }}>
+                    {courtBooking ? bookingCountdown?.label : 'Chưa đặt sân'}
+                  </p>
+                </div>
+              </div>
+
+              {courtBooking ? (
+                <div
+                  className="rounded-2xl px-3 py-3"
+                  style={{ background: bookingCountdown?.isUrgent ? 'rgba(231,111,81,0.08)' : 'rgba(14,124,123,0.06)' }}
+                >
+                  <div className="flex items-start gap-2">
+                    <BadgeCheck style={{ width: 15, height: 15, color: '#0E7C7B', flexShrink: 0, marginTop: 1 }} />
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 800, color: '#0E7C7B' }}>
+                        {bookingCountdown?.detail ?? 'Đang theo dõi lịch sân'}
+                      </p>
+                      <p style={{ fontSize: 11, color: '#6B7280', marginTop: 2, lineHeight: 1.4 }}>
+                        Nhấn để đổi sân, hủy đặt hoặc xem sân trống đề xuất khác.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="rounded-2xl px-3 py-3"
+                  style={{ background: 'rgba(244,162,97,0.08)' }}
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle style={{ width: 15, height: 15, color: '#E8832A', flexShrink: 0, marginTop: 1 }} />
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 800, color: '#E8832A' }}>
+                        Chưa có sân đã đặt
+                      </p>
+                      <p style={{ fontSize: 11, color: '#6B7280', marginTop: 2, lineHeight: 1.4 }}>
+                        Dùng thao tác nhanh “Đặt sân” để tìm sân trống theo đề xuất.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </button>
           <div>
             <p style={{ fontSize:12, fontWeight:800, color:'#374151', letterSpacing:'0.04em', marginBottom:10 }}>
               THAO TÁC NHANH
             </p>
             <div className="grid grid-cols-2 gap-3">
               {[
+                {
+                  label:    'Đặt sân',
+                  sub:      'Sân trống đề xuất · Giữ chỗ nhanh',
+                  icon:     CalendarDays,
+                  iconBg:   'rgba(14,124,123,0.10)',
+                  iconColor:'#0E7C7B',
+                  border:   'rgba(14,124,123,0.18)',
+                  screen:   'member-court-booking',
+                },
                 {
                   label:    'Xem lịch học',
                   sub:      'Lịch Thứ 3 & Thứ 6',
@@ -378,24 +492,30 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                   border:   'rgba(129,90,213,0.20)',
                   screen:   'member-contact',
                 },
+                {
+                  label:    'Quyền lợi hội viên',
+                  sub:      'Xem 4 quyền lợi',
+                  icon:     BadgeCheck,
+                  iconBg:   'rgba(233,196,106,0.16)',
+                  iconColor:'#B88700',
+                  border:   'rgba(233,196,106,0.24)',
+                },
               ].map((action, i) => (
                 <button
                   key={i}
-                  onClick={() => onNavigate(action.screen)}
+                  onClick={() => action.screen ? onNavigate(action.screen) : setShowMemberBenefits((prev) => !prev)}
                   className="flex flex-col gap-3 p-4 bg-white rounded-2xl text-left active:scale-95 transition-all"
                   style={{
-                    border:     `1.5px solid ${action.border}`,
-                    boxShadow:  '0 2px 12px rgba(0,0,0,0.05)',
+                    border: '1.5px solid ' + action.border,
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
                   }}
                 >
-                  {/* Icon */}
                   <div
                     className="flex items-center justify-center rounded-xl"
                     style={{ width:40, height:40, background: action.iconBg }}
                   >
                     <action.icon style={{ width:18, height:18, color: action.iconColor }} />
                   </div>
-                  {/* Label */}
                   <div>
                     <p style={{ fontSize:13, fontWeight:800, color:'#1F2933', lineHeight:1.25 }}>
                       {action.label}
@@ -407,11 +527,82 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* ─────────────────────────────────────────
-              THỐNG KÊ THÁNG NÀY
-          ───────────────────────────────────────── */}
+            {showMemberBenefits && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2.5">
+                  <p style={{ fontSize:12, fontWeight:800, color:'#374151', letterSpacing:'0.04em' }}>
+                    QUYỀN LỢI HỘI VIÊN
+                  </p>
+                  <span
+                    className="px-2.5 py-1 rounded-lg"
+                    style={{ fontSize:10, fontWeight:800, color:'#0E7C7B', background:'rgba(14,124,123,0.10)' }}
+                  >
+                    4 mục chính
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    {
+                      label: 'Đặt sân ưu tiên',
+                      sub: 'Xem sân trống và giữ chỗ nhanh',
+                      icon: CalendarDays,
+                      bg: 'rgba(14,124,123,0.10)',
+                      color: '#0E7C7B',
+                    },
+                    {
+                      label: 'Thuê đồ tại sân',
+                      sub: 'Vợt, bóng, phụ kiện cơ bản',
+                      icon: BookOpen,
+                      bg: 'rgba(42,157,143,0.10)',
+                      color: '#2A9D8F',
+                    },
+                    {
+                      label: 'Nhắc giờ sử dụng',
+                      sub: 'Nhắc trước khi tới sân',
+                      icon: BellRing,
+                      bg: 'rgba(244,162,97,0.14)',
+                      color: '#E8832A',
+                    },
+                    {
+                      label: 'Đổi / hủy lịch nhanh',
+                      sub: 'Thay đổi khi kế hoạch đổi',
+                      icon: RefreshCw,
+                      bg: 'rgba(129,90,213,0.10)',
+                      color: '#815AD5',
+                    },
+                  ].map((benefit, index) => (
+                    <div
+                      key={index}
+                      className="bg-white rounded-2xl p-4"
+                      style={{
+                        border: '1.5px solid rgba(0,0,0,0.06)',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: benefit.bg }}
+                        >
+                          <benefit.icon style={{ width: 18, height: 18, color: benefit.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p style={{ fontSize:13, fontWeight:800, color:'#1F2933', lineHeight:1.25 }}>
+                            {benefit.label}
+                          </p>
+                          <p style={{ fontSize:10, color:'#9CA3AF', fontWeight:500, marginTop:3, lineHeight:1.4 }}>
+                            {benefit.sub}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <p style={{ fontSize:12, fontWeight:800, color:'#374151', letterSpacing:'0.04em' }}>
@@ -426,7 +617,7 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
               </button>
             </div>
 
-            {/* 2 × 2 grid */}
+            {/* 2 Ă— 2 grid */}
             <div className="grid grid-cols-2 gap-3">
               {MONTHLY_STATS.map((stat, i) => (
                 <div
@@ -463,9 +654,9 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
             </div>
           </div>
 
-          {/* ─────────────────────────────────────────
-              Gói học — bottom link
-          ───────────────────────────────────────── */}
+          {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              GĂ³i há»c — bottom link
+          â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <button
             onClick={() => onNavigate('member-package')}
             className="flex items-center gap-4 w-full bg-white rounded-2xl px-4 py-4 active:scale-95 transition-all"
@@ -505,3 +696,4 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
     </div>
   );
 }
+
