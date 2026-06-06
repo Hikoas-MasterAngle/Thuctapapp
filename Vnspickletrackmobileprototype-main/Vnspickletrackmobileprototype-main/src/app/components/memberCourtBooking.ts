@@ -1,4 +1,5 @@
 export const COURT_BOOKING_STORAGE_KEY = 'vns-pickletrack-member-court-booking-v1';
+export const COURT_BOOKING_HISTORY_STORAGE_KEY = 'vns-pickletrack-member-court-booking-history-v1';
 
 export const COURT_NAMES = ['Sân 1', 'Sân 2', 'Sân 3', 'Sân 4'] as const;
 
@@ -14,6 +15,16 @@ export interface CourtBooking {
   timeStart: string;
   timeEnd: string;
   reminderMinutes: number;
+  createdAtISO: string;
+}
+
+export interface CourtBookingHistoryItem {
+  id: string;
+  action: 'booked' | 'rescheduled' | 'cancelled';
+  court: string;
+  dateLabel: string;
+  timeStart: string;
+  timeEnd: string;
   createdAtISO: string;
 }
 
@@ -324,4 +335,35 @@ export function clearCourtBooking() {
 
 export function getBookingDateTimeLabel(booking: CourtBooking) {
   return `${booking.dateLabel} · ${booking.timeStart} - ${booking.timeEnd}`;
+}
+
+export function loadCourtBookingHistory() {
+  if (typeof window === 'undefined') return [] as CourtBookingHistoryItem[];
+  try {
+    const raw = window.localStorage.getItem(COURT_BOOKING_HISTORY_STORAGE_KEY);
+    if (!raw) return [] as CourtBookingHistoryItem[];
+    const parsed = JSON.parse(raw) as CourtBookingHistoryItem[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [] as CourtBookingHistoryItem[];
+  }
+}
+
+export function saveCourtBookingHistory(items: CourtBookingHistoryItem[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(COURT_BOOKING_HISTORY_STORAGE_KEY, JSON.stringify(items.slice(0, 5)));
+}
+
+export function addCourtBookingHistoryItem(item: Omit<CourtBookingHistoryItem, 'id' | 'createdAtISO'>) {
+  const currentItems = loadCourtBookingHistory();
+  const nextItems: CourtBookingHistoryItem[] = [
+    {
+      ...item,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAtISO: new Date().toISOString(),
+    },
+    ...currentItems,
+  ];
+  saveCourtBookingHistory(nextItems);
+  return nextItems;
 }

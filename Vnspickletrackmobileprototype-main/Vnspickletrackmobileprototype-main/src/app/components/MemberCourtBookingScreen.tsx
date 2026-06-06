@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import {
   BOOKING_REMINDER_MINUTES,
+  addCourtBookingHistoryItem,
   buildCourtBooking,
   clearCourtBooking,
   formatBookingCompactDate,
@@ -25,8 +26,10 @@ import {
   getFacilityStatus,
   getSuggestedSlots,
   loadCourtBooking,
+  loadCourtBookingHistory,
   saveCourtBooking,
   type CourtBooking,
+  type CourtBookingHistoryItem,
   type CourtSlot,
 } from './memberCourtBooking';
 
@@ -120,6 +123,7 @@ export function MemberCourtBookingScreen({
   const [now, setNow] = useState(() => new Date());
   const [selectedDateISO, setSelectedDateISO] = useState(() => getDateOptions().find(option => option.isToday)?.dateISO ?? '');
   const [savedBooking, setSavedBooking] = useState<CourtBooking | null>(() => loadCourtBooking());
+  const [bookingHistory, setBookingHistory] = useState<CourtBookingHistoryItem[]>(() => loadCourtBookingHistory());
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -165,6 +169,14 @@ export function MemberCourtBookingScreen({
     const nextBooking = buildCourtBooking(slot, BOOKING_REMINDER_MINUTES);
     saveCourtBooking(nextBooking);
     setSavedBooking(nextBooking);
+    const nextHistory = addCourtBookingHistoryItem({
+      action: mode === 'new' ? 'booked' : 'rescheduled',
+      court: slot.court,
+      dateLabel: slot.dateLabel,
+      timeStart: slot.timeStart,
+      timeEnd: slot.timeEnd,
+    });
+    setBookingHistory(nextHistory);
     if (mode === 'new') {
       onBooked();
       return;
@@ -179,9 +191,31 @@ export function MemberCourtBookingScreen({
   }
 
   function handleCancelBooking() {
+    if (savedBooking) {
+      const nextHistory = addCourtBookingHistoryItem({
+        action: 'cancelled',
+        court: savedBooking.court,
+        dateLabel: savedBooking.dateLabel,
+        timeStart: savedBooking.timeStart,
+        timeEnd: savedBooking.timeEnd,
+      });
+      setBookingHistory(nextHistory);
+    }
     clearCourtBooking();
     setSavedBooking(null);
     onCancelled();
+  }
+
+  function actionLabel(action: CourtBookingHistoryItem['action']) {
+    if (action === 'booked') return 'Đã đặt';
+    if (action === 'rescheduled') return 'Đổi lịch';
+    return 'Đã hủy';
+  }
+
+  function actionColor(action: CourtBookingHistoryItem['action']) {
+    if (action === 'booked') return '#0E7C7B';
+    if (action === 'rescheduled') return '#E8832A';
+    return '#E76F51';
   }
 
   return (
@@ -359,6 +393,75 @@ export function MemberCourtBookingScreen({
               </div>
             </div>
           )}
+
+          <div>
+            <div className="flex items-center justify-between mb-2.5">
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 800, color: '#374151', letterSpacing: '0.04em' }}>
+                  LỊCH SỬ ĐẶT SÂN
+                </p>
+                <p style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, marginTop: 2 }}>
+                  Vết booking gần nhất trong prototype.
+                </p>
+              </div>
+              <span
+                className="rounded-xl px-2.5 py-1"
+                style={{ background: 'rgba(14,124,123,0.10)' }}
+              >
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#0E7C7B' }}>
+                  {bookingHistory.length} mục
+                </span>
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {bookingHistory.length > 0 ? bookingHistory.map(item => (
+                <div
+                  key={item.id}
+                  className="rounded-3xl p-3.5"
+                  style={{ background: 'white', border: '1.5px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p style={{ fontSize: 13, fontWeight: 900, color: '#1F2933' }}>{item.court}</p>
+                        <span
+                          className="px-2 py-0.5 rounded-lg"
+                          style={{ fontSize: 9, fontWeight: 900, color: actionColor(item.action), background: `${actionColor(item.action)}14` }}
+                        >
+                          {actionLabel(item.action)}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>
+                        {item.dateLabel}
+                      </p>
+                      <p style={{ fontSize: 12, color: '#374151', fontWeight: 700, marginTop: 2 }}>
+                        {item.timeStart} - {item.timeEnd}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 600 }}>Đã ghi</p>
+                      <p style={{ fontSize: 11, color: '#6B7280', fontWeight: 700, marginTop: 2 }}>
+                        {item.createdAtISO.slice(11, 16)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )) : (
+                <div
+                  className="rounded-3xl p-4 text-center"
+                  style={{ background: 'white', border: '1.5px dashed rgba(14,124,123,0.18)' }}
+                >
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#1F2933' }}>
+                    Chưa có lịch sử đặt sân
+                  </p>
+                  <p style={{ fontSize: 11, color: '#6B7280', marginTop: 2, lineHeight: 1.5 }}>
+                    Khi bạn đặt hoặc đổi sân, lịch sử sẽ hiện ở đây.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
 
           <div>
             <div className="flex items-center justify-between mb-2.5">
