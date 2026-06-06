@@ -65,6 +65,7 @@ import { MemberDashboard }                 from './components/MemberDashboard';
 import { MemberProfileScreen }             from './components/MemberProfileScreen';
 import { MemberScheduleScreen }            from './components/MemberScheduleScreen';
 import { MemberCourtBookingScreen }        from './components/MemberCourtBookingScreen';
+import { MemberEquipmentRentalScreen }     from './components/MemberEquipmentRentalScreen';
 import { MemberPackageScreen }             from './components/MemberPackageScreen';
 import { MemberAttendanceHistoryScreen }   from './components/MemberAttendanceHistoryScreen';
 import { MemberPaymentHistoryScreen }      from './components/MemberPaymentHistoryScreen';
@@ -173,6 +174,7 @@ const ADMIN_BLOCKED_SCREENS = new Set<string>([
   'member-profile',
   'member-schedule',
   'member-court-booking',
+  'member-equipment-rental',
   'member-package',
   'member-attendance-history',
   'member-payment-history',
@@ -201,6 +203,7 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   'member-dashboard': 'Dashboard Hội viên',
   'member-schedule': 'Lịch học Hội viên',
   'member-court-booking': 'Đặt sân Hội viên',
+  'member-equipment-rental': 'Thu? ?? t?i s?n',
   'member-package': 'Gói học Hội viên',
   'member-attendance-history': 'Lịch sử học Hội viên',
   'member-payment-history': 'Lịch sử thanh toán Hội viên',
@@ -772,6 +775,14 @@ export default function App() {
             onBooked={() => showSuccess('Đã đặt sân thành công! Nhắc giờ đã được bật trước 30 phút.', () => navigate('member-dashboard', true))}
             onRescheduled={() => showSuccess('Đã đổi khung giờ sân thành công!', () => navigate('member-dashboard', true))}
             onCancelled={() => showSuccess('Đã hủy đặt sân thành công.', () => navigate('member-dashboard', true))}
+          />
+        );
+
+      case 'member-equipment-rental':
+        return (
+          <MemberEquipmentRentalScreen
+            onBack={goBack}
+            onConfirm={() => showSuccess('?? ghi nh?n y?u c?u thu? ?? t?i s?n!', () => navigate('member-dashboard', true))}
           />
         );
 

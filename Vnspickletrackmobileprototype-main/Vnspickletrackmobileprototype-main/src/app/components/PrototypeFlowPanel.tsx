@@ -27,6 +27,7 @@ export type Screen =
   /* Member / Student role screens */
   | 'member-dashboard' | 'member-profile' | 'member-schedule'
   | 'member-court-booking'
+  | 'member-equipment-rental'
   | 'member-package' | 'member-attendance-history' | 'member-payment-history'
   | 'member-renew-request' | 'member-session-warning' | 'member-contact'
   /* Documentation */

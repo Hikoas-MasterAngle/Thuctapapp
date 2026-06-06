@@ -390,7 +390,7 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                     <span style={{ fontSize: 10, color: '#6B7280', fontWeight: 700 }}>Nhắc sân</span>
                   </div>
                   <p style={{ fontSize: 13, color: '#0E7C7B', fontWeight: 900 }}>
-                    {courtBooking ? `TrÆ°á»›c ${courtBooking.reminderMinutes} phút` : 'Khi đặt sẽ bật'}
+                    {courtBooking ? `Trước ${courtBooking.reminderMinutes} phút` : 'Khi đặt sẽ bật'}
                   </p>
                 </div>
                 <div className="rounded-2xl px-3 py-3" style={{ background: 'rgba(244,162,97,0.08)' }}>
@@ -557,6 +557,7 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                       icon: BookOpen,
                       bg: 'rgba(42,157,143,0.10)',
                       color: '#2A9D8F',
+                      screen: 'member-equipment-rental',
                     },
                     {
                       label: 'Nhắc giờ sử dụng',
@@ -573,9 +574,11 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                       color: '#815AD5',
                     },
                   ].map((benefit, index) => (
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => benefit.screen && onNavigate(benefit.screen)}
                       key={index}
-                      className="bg-white rounded-2xl p-4"
+                      className="bg-white rounded-2xl p-4 text-left active:scale-[0.99] transition-all"
                       style={{
                         border: '1.5px solid rgba(0,0,0,0.06)',
                         boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
@@ -597,7 +600,7 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
