@@ -57,7 +57,7 @@ const STATUS_CFG = {
 /* Sessions remaining urgency */
 function getSessionUrgency(n: number) {
   if (n === 0) return { color:'#E76F51', gradient:'linear-gradient(135deg,#C62828 0%,#E76F51 100%)', shadow:'rgba(231,111,81,0.40)', label:'Đã hết buổi!',       alertBg:'rgba(231,111,81,0.15)', alertBorder:'rgba(231,111,81,0.35)', alertColor:'#C85A3D' };
-  if (n <= 2)  return { color:'#E76F51', gradient:'linear-gradient(135deg,#C62828 0%,#E76F51 100%)', shadow:'rgba(231,111,81,0.38)', label:'Sắp hết buổi',       alertBg:'rgba(231,111,81,0.12)', alertBorder:'rgba(231,111,81,0.30)', alertColor:'#C85A3D' };
+  if (n <= 2)  return { color:'#E76F51', gradient:'linear-gradient(135deg,#C62828 0%,#E76F51 100%)', shadow:'rgba(231,111,81,0.38)', label:'Sắp hết hạn',       alertBg:'rgba(231,111,81,0.12)', alertBorder:'rgba(231,111,81,0.30)', alertColor:'#C85A3D' };
   if (n <= 5)  return { color:'#F4A261', gradient:'linear-gradient(135deg,#E76F51 0%,#F4A261 100%)', shadow:'rgba(244,162,97,0.35)', label:'Sáº¯p háº¿t — gia háº¡n sá»›m', alertBg:'rgba(244,162,97,0.12)', alertBorder:'rgba(244,162,97,0.30)', alertColor:'#9E5A00' };
   return               { color:'#2A9D8F', gradient:'linear-gradient(135deg,#0E7C7B 0%,#2A9D8F 100%)', shadow:'rgba(14,124,123,0.30)', label:'',                   alertBg:'', alertBorder:'', alertColor:'' };
 }
@@ -482,6 +482,15 @@ export function MemberDashboard({ onNavigate, onNotification }: MemberDashboardP
                   iconColor:'#E8832A',
                   border:   'rgba(244,162,97,0.30)',
                   screen:   'member-renew-request',
+                },
+                {
+                  label:    'Gói hội viên của tôi',
+                  sub:      'Xem gói hiện tại và gia hạn',
+                  icon:     BadgeCheck,
+                  iconBg:   'rgba(14,124,123,0.10)',
+                  iconColor:'#0E7C7B',
+                  border:   'rgba(14,124,123,0.18)',
+                  screen:   'member-membership-overview',
                 },
                 {
                   label:    'Liên hệ Coach',

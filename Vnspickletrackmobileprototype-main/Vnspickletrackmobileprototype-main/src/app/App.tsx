@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 
-/* ── Component imports ── */
+/* â”€â”€ Component imports â”€â”€ */
 import { SplashScreen }             from './components/SplashScreen';
 import { LoginScreen }              from './components/LoginScreen';
 import { DashboardAdmin }           from './components/DashboardAdmin';
@@ -46,7 +46,7 @@ import { ChangePINScreen }           from './components/ChangePINScreen';
 import { EmptyStatesScreen }         from './components/EmptyStates';
 import { AccessDeniedScreen }        from './components/AccessDeniedScreen';
 
-/* ── Newly wired screens ── */
+/* â”€â”€ Newly wired screens â”€â”€ */
 import { AdjustSessionsScreen }            from './components/AdjustSessionsScreen';
 import { ChangeStudentStatusDialogScreen } from './components/ChangeStudentStatusDialog';
 import { CancelSessionDialog }             from './components/CancelSessionDialog';
@@ -60,11 +60,13 @@ import { DevHandoffScreen }                from './components/DevHandoffScreen';
 import { Sitemap }                         from './components/Sitemap';
 import { ScreenFlowDocument }              from './components/ScreenFlowDocument';
 
-/* ── Member / Student role screens ── */
+/* â”€â”€ Member / Student role screens â”€â”€ */
 import { MemberDashboard }                 from './components/MemberDashboard';
 import { MemberProfileScreen }             from './components/MemberProfileScreen';
 import { MemberScheduleScreen }            from './components/MemberScheduleScreen';
 import { MemberCourtBookingScreen }        from './components/MemberCourtBookingScreen';
+import { MemberMembershipOverviewScreen }  from './components/MemberMembershipOverviewScreen';
+import { MemberMembershipRegistrationScreen } from './components/MemberMembershipRegistrationScreen';
 import { MemberEquipmentRentalScreen }     from './components/MemberEquipmentRentalScreen';
 import { MemberPackageScreen }             from './components/MemberPackageScreen';
 import { MemberAttendanceHistoryScreen }   from './components/MemberAttendanceHistoryScreen';
@@ -74,7 +76,7 @@ import { MemberSessionWarningScreen }      from './components/MemberSessionWarni
 import { MemberContactScreen }             from './components/MemberContactScreen';
 import { MemberBottomNavigation }          from './components/MemberBottomNavigation';
 
-/* ── Success Dialog ── */
+/* â”€â”€ Success Dialog â”€â”€ */
 interface SuccessDialogProps {
   message:  string;
   onClose:  () => void;
@@ -132,7 +134,7 @@ function SuccessDialog({ message, onClose }: SuccessDialogProps) {
   );
 }
 
-/* ── Tab screens ── */
+/* â”€â”€ Tab screens â”€â”€ */
 const TAB_SCREENS: Screen[] = ['dashboard', 'today-classes', 'students-list', 'reports', 'settings'];
 type Role = 'admin' | 'coach' | 'member';
 
@@ -174,6 +176,8 @@ const ADMIN_BLOCKED_SCREENS = new Set<string>([
   'member-profile',
   'member-schedule',
   'member-court-booking',
+  'member-membership-overview',
+  'member-membership-registration',
   'member-equipment-rental',
   'member-package',
   'member-attendance-history',
@@ -186,28 +190,30 @@ const ADMIN_BLOCKED_SCREENS = new Set<string>([
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   dashboard: 'Dashboard Admin',
   'dashboard-coach': 'Dashboard Coach',
-  'today-classes': 'Lớp hôm nay',
-  'attendance-check': 'Điểm danh học viên',
-  'students-list': 'Danh sách học viên',
-  'add-student': 'Thêm học viên',
-  'student-detail': 'Chi tiết học viên',
-  'renew-package': 'Gia hạn gói học',
-  reports: 'Báo cáo',
-  'report-revenue': 'Doanh thu tháng',
-  settings: 'Cài đặt',
-  backup: 'Sao lưu dữ liệu',
-  'export-csv': 'Xuất CSV',
-  'restore-data': 'Khôi phục dữ liệu',
-  'package-management': 'Quản lý gói học',
-  'user-management': 'Quản lý người dùng',
-  'member-dashboard': 'Dashboard Hội viên',
-  'member-schedule': 'Lịch học Hội viên',
-  'member-court-booking': 'Đặt sân Hội viên',
-  'member-equipment-rental': 'Thu? ?? t?i s?n',
-  'member-package': 'Gói học Hội viên',
-  'member-attendance-history': 'Lịch sử học Hội viên',
-  'member-payment-history': 'Lịch sử thanh toán Hội viên',
-  'member-renew-request': 'Yêu cầu gia hạn',
+  'today-classes': 'Lá»›p hĂ´m nay',
+  'attendance-check': 'Äiá»ƒm danh há»c viĂªn',
+  'students-list': 'Danh sĂ¡ch há»c viĂªn',
+  'add-student': 'ThĂªm há»c viĂªn',
+  'student-detail': 'Chi tiáº¿t há»c viĂªn',
+  'renew-package': 'Gia háº¡n gĂ³i há»c',
+  reports: 'BĂ¡o cĂ¡o',
+  'report-revenue': 'Doanh thu thĂ¡ng',
+  settings: 'CĂ i Ä‘áº·t',
+  backup: 'Sao lÆ°u dá»¯ liá»‡u',
+  'export-csv': 'Xuáº¥t CSV',
+  'restore-data': 'KhĂ´i phá»¥c dá»¯ liá»‡u',
+  'package-management': 'Quáº£n lĂ½ gĂ³i há»c',
+  'user-management': 'Quáº£n lĂ½ ngÆ°á»i dĂ¹ng',
+  'member-dashboard': 'Dashboard Há»™i viĂªn',
+  'member-schedule': 'Lá»‹ch há»c Há»™i viĂªn',
+  'member-court-booking': 'Äáº·t sĂ¢n Há»™i viĂªn',
+  'member-membership-overview': 'Gói hội viên của tôi',
+  'member-membership-registration': 'ÄÄƒng kĂ½ gĂ³i há»™i viĂªn',
+  'member-equipment-rental': 'ThuĂª Ä‘á»“ táº¡i sĂ¢n',
+  'member-package': 'GĂ³i há»c',
+  'member-attendance-history': 'Lá»‹ch sá»­ há»c Há»™i viĂªn',
+  'member-payment-history': 'Lá»‹ch sá»­ thanh toĂ¡n Há»™i viĂªn',
+  'member-renew-request': 'YĂªu cáº§u gia háº¡n',
 };
 
 function normalizeScreen(screen: Screen): Screen {
@@ -221,9 +227,9 @@ function homeForRole(role: Role): Screen {
 }
 
 function roleDisplayName(role: Role) {
-  if (role === 'coach') return 'Huấn luyện viên';
-  if (role === 'member') return 'Hội viên';
-  return 'Quản trị viên';
+  if (role === 'coach') return 'Huáº¥n luyá»‡n viĂªn';
+  if (role === 'member') return 'Há»™i viĂªn';
+  return 'Quáº£n trá»‹ viĂªn';
 }
 
 function canAccessScreen(screen: Screen, role: Role) {
@@ -237,19 +243,19 @@ function canAccessScreen(screen: Screen, role: Role) {
 }
 
 export default function App() {
-  /* ── Navigation stack ── */
+  /* â”€â”€ Navigation stack â”€â”€ */
   const [stack,   setStack]   = useState<Screen[]>(['splash']);
   const [dir,     setDir]     = useState<'forward' | 'back' | 'tab'>('forward');
   const [animKey, setAnimKey] = useState(0);
 
-  /* ── Role ── */
+  /* â”€â”€ Role â”€â”€ */
   const [role, setRole] = useState<Role>('admin');
 
-  /* ── Success dialog ── */
+  /* â”€â”€ Success dialog â”€â”€ */
   const [successMsg,  setSuccessMsg]  = useState<string | null>(null);
   const successCb = useRef<(() => void) | null>(null);
 
-  /* ── Current screen ── */
+  /* â”€â”€ Current screen â”€â”€ */
   const currentScreen = stack[stack.length - 1];
 
   function navigate(screen: Screen, replace = false) {
@@ -299,7 +305,7 @@ export default function App() {
     switchTab(homeForRole(role));
   }
 
-  /* ── Jump (from flow panel) ── */
+  /* â”€â”€ Jump (from flow panel) â”€â”€ */
   function handleJump(screen: Screen, flowRole?: Role) {
     const target = normalizeScreen(screen);
     if (flowRole) setRole(flowRole);
@@ -318,7 +324,7 @@ export default function App() {
     }
   }
 
-  /* ── Auto Splash → Login ── */
+  /* â”€â”€ Auto Splash â†’ Login â”€â”€ */
   useEffect(() => {
     if (currentScreen === 'splash') {
       const t = setTimeout(() => navigate('login', true), 2500);
@@ -326,23 +332,23 @@ export default function App() {
     }
   }, [currentScreen]);
 
-  /* ── Animation class ── */
+  /* â”€â”€ Animation class â”€â”€ */
   const animClass = dir === 'back' ? 'screen-enter-back' : dir === 'tab' ? 'screen-enter-tab' : 'screen-enter-forward';
 
-  /* ── Show bottom nav ── */
+  /* â”€â”€ Show bottom nav â”€â”€ */
   const showNav = role !== 'member' && (TAB_SCREENS.includes(currentScreen) || currentScreen === ('dashboard-coach' as Screen));
 
-  /* ── Member tab screens ── */
+  /* â”€â”€ Member tab screens â”€â”€ */
   const MEMBER_TAB_SCREENS: Screen[] = [
     'member-dashboard', 'member-schedule', 'member-package',
     'member-attendance-history', 'member-profile',
   ];
   const showMemberNav = role === 'member' && MEMBER_TAB_SCREENS.includes(currentScreen);
 
-  /* ── Member tab active ── */
+  /* â”€â”€ Member tab active â”€â”€ */
   const memberTabActive = currentScreen;
 
-  /* ── Active tab ── */
+  /* â”€â”€ Active tab â”€â”€ */
   const activeTab =
     currentScreen === 'dashboard' || currentScreen === ('dashboard-coach' as Screen)
       ? 'home'
@@ -350,7 +356,7 @@ export default function App() {
         ? currentScreen
         : 'home';
 
-  /* ── Render ── */
+  /* â”€â”€ Render â”€â”€ */
   function renderScreen() {
     if (!canAccessScreen(currentScreen, role)) {
       return (
@@ -364,7 +370,7 @@ export default function App() {
 
     switch (currentScreen as string) {
 
-      /* ── Onboarding ── */
+      /* â”€â”€ Onboarding â”€â”€ */
       case 'splash':
         return <SplashScreen />;
 
@@ -379,7 +385,7 @@ export default function App() {
           }} />
         );
 
-      /* ── Dashboards ── */
+      /* â”€â”€ Dashboards â”€â”€ */
       case 'dashboard':
         return (
           <DashboardAdmin onNavigate={(s) => navigate(s as Screen)} />
@@ -390,7 +396,7 @@ export default function App() {
           <DashboardCoach onNavigate={(s) => navigate(s as Screen)} />
         );
 
-      /* ── Attendance ── */
+      /* â”€â”€ Attendance â”€â”€ */
       case 'today-classes':
         return (
           <TodayClassesScreen
@@ -403,11 +409,11 @@ export default function App() {
         return (
           <AttendanceCheckScreen
             onBack={goBack}
-            onSave={() => showSuccess('Đã lưu điểm danh thành công!', () => navigate('today-classes', true))}
+            onSave={() => showSuccess('ÄĂ£ lÆ°u Ä‘iá»ƒm danh thĂ nh cĂ´ng!', () => navigate('today-classes', true))}
           />
         );
 
-      /* ── Students ── */
+      /* â”€â”€ Students â”€â”€ */
       case 'students-list':
         return (
           <StudentsListScreen
@@ -420,7 +426,7 @@ export default function App() {
         return (
           <AddStudentScreen
             onBack={goBack}
-            onSave={() => showSuccess('Đã thêm học viên thành công!', () => navigate('student-detail', true))}
+            onSave={() => showSuccess('ÄĂ£ thĂªm há»c viĂªn thĂ nh cĂ´ng!', () => navigate('student-detail', true))}
           />
         );
 
@@ -439,11 +445,11 @@ export default function App() {
         return (
           <RenewPackageScreen
             onBack={goBack}
-            onConfirm={() => showSuccess('Đã gia hạn gói học thành công!', () => navigate('student-detail', true))}
+            onConfirm={() => showSuccess('ÄĂ£ gia háº¡n gĂ³i há»c thĂ nh cĂ´ng!', () => navigate('student-detail', true))}
           />
         );
 
-      /* ── Reports ── */
+      /* â”€â”€ Reports â”€â”€ */
       case 'reports':
         return <ReportsPage role={role} onNavigate={(s) => navigate(s as Screen)} />;
 
@@ -460,8 +466,8 @@ export default function App() {
           return (
             <AccessDeniedScreen
               onBack={goBack}
-              roleName={role === 'coach' ? 'Huấn luyện viên' : 'Hội viên'}
-              featureName="Doanh thu tháng"
+              roleName={role === 'coach' ? 'Huáº¥n luyá»‡n viĂªn' : 'Há»™i viĂªn'}
+              featureName="Doanh thu thĂ¡ng"
             />
           );
         }
@@ -473,7 +479,7 @@ export default function App() {
       case 'student-report':
         return <StudentReportScreen onBack={goBack} onNavigate={(s) => navigate(s as Screen)} />;
 
-      /* ── Settings ── */
+      /* â”€â”€ Settings â”€â”€ */
       case 'settings':
         return (
           <SettingsPage
@@ -497,7 +503,7 @@ export default function App() {
           />
         );
 
-      /* ── Classes ── */
+      /* â”€â”€ Classes â”€â”€ */
       case 'class-list':
         return (
           <ClassListScreen
@@ -512,7 +518,7 @@ export default function App() {
         return (
           <AddClassScreen
             onBack={goBack}
-            onSave={() => showSuccess('Đã thêm lớp học thành công!', goBack)}
+            onSave={() => showSuccess('ÄĂ£ thĂªm lá»›p há»c thĂ nh cĂ´ng!', goBack)}
           />
         );
 
@@ -520,7 +526,7 @@ export default function App() {
         return (
           <EditClassScreen
             onBack={goBack}
-            onSave={() => showSuccess('Đã cập nhật lớp học thành công!', goBack)}
+            onSave={() => showSuccess('ÄĂ£ cáº­p nháº­t lá»›p há»c thĂ nh cĂ´ng!', goBack)}
           />
         );
 
@@ -540,11 +546,11 @@ export default function App() {
         return (
           <AssignStudentsScreen
             onBack={goBack}
-            onConfirm={() => showSuccess('Đã cập nhật danh sách học viên trong lớp!', goBack)}
+            onConfirm={() => showSuccess('ÄĂ£ cáº­p nháº­t danh sĂ¡ch há»c viĂªn trong lá»›p!', goBack)}
           />
         );
 
-      /* ── Sessions ── */
+      /* â”€â”€ Sessions â”€â”€ */
       case 'select-class-session':
         return (
           <SelectClassForSessionScreen
@@ -574,17 +580,17 @@ export default function App() {
         return (
           <CompleteSessionScreen
             onBack={goBack}
-            onComplete={() => showSuccess('Đã hoàn tất buổi học thành công!', () => navigate('today-classes', true))}
-            onCancel={() => showSuccess('Đã hủy buổi học.', () => navigate('today-classes', true))}
+            onComplete={() => showSuccess('ÄĂ£ hoĂ n táº¥t buá»•i há»c thĂ nh cĂ´ng!', () => navigate('today-classes', true))}
+            onCancel={() => showSuccess('ÄĂ£ há»§y buá»•i há»c.', () => navigate('today-classes', true))}
           />
         );
 
-      /* ── Student extras ── */
+      /* â”€â”€ Student extras â”€â”€ */
       case 'edit-student':
         return (
           <EditStudentScreen
             onBack={goBack}
-            onSave={() => showSuccess('Đã cập nhật thông tin học viên!', () => navigate('student-detail', true))}
+            onSave={() => showSuccess('ÄĂ£ cáº­p nháº­t thĂ´ng tin há»c viĂªn!', () => navigate('student-detail', true))}
           />
         );
 
@@ -592,7 +598,7 @@ export default function App() {
         return (
           <AdjustSessionsScreen
             onBack={goBack}
-            onConfirm={() => showSuccess('Đã điều chỉnh số buổi thành công!', () => navigate('student-detail', true))}
+            onConfirm={() => showSuccess('ÄĂ£ Ä‘iá»u chá»‰nh sá»‘ buá»•i thĂ nh cĂ´ng!', () => navigate('student-detail', true))}
           />
         );
 
@@ -600,7 +606,7 @@ export default function App() {
         return (
           <ChangeStudentStatusDialogScreen
             onBack={goBack}
-            onConfirm={() => showSuccess('Đã cập nhật trạng thái học viên!', () => navigate('student-detail', true))}
+            onConfirm={() => showSuccess('ÄĂ£ cáº­p nháº­t tráº¡ng thĂ¡i há»c viĂªn!', () => navigate('student-detail', true))}
           />
         );
 
@@ -610,7 +616,7 @@ export default function App() {
       case 'attendance-history':
         return <AttendanceHistoryScreen onBack={goBack} />;
 
-      /* ── Session dialogs (standalone demo pages) ── */
+      /* â”€â”€ Session dialogs (standalone demo pages) â”€â”€ */
       case 'cancel-session-dialog':
         return (
           <div className="relative h-screen flex flex-col items-center justify-end bg-gray-900/60">
@@ -618,7 +624,7 @@ export default function App() {
             <CancelSessionDialog
               visible={true}
               onClose={goBack}
-              onConfirm={() => showSuccess('Đã hủy buổi học thành công!', () => navigate('today-classes', true))}
+              onConfirm={() => showSuccess('ÄĂ£ há»§y buá»•i há»c thĂ nh cĂ´ng!', () => navigate('today-classes', true))}
             />
           </div>
         );
@@ -630,7 +636,7 @@ export default function App() {
             <CompleteSessionDialog
               visible={true}
               onClose={goBack}
-              onConfirm={() => showSuccess('Đã hoàn tất buổi học!', () => navigate('today-classes', true))}
+              onConfirm={() => showSuccess('ÄĂ£ hoĂ n táº¥t buá»•i há»c!', () => navigate('today-classes', true))}
             />
           </div>
         );
@@ -642,12 +648,12 @@ export default function App() {
             <SuspendClassDialog
               visible={true}
               onClose={goBack}
-              onConfirm={() => showSuccess('Đã ngưng lớp học!', () => navigate('class-list', true))}
+              onConfirm={() => showSuccess('ÄĂ£ ngÆ°ng lá»›p há»c!', () => navigate('class-list', true))}
             />
           </div>
         );
 
-      /* ── Dialog showcases ── */
+      /* â”€â”€ Dialog showcases â”€â”€ */
       case 'dialogs-showcase':
         return (
           <DialogsShowcase onBack={goBack} />
@@ -663,7 +669,7 @@ export default function App() {
           <AttendanceDialogsDemo onBack={goBack} />
         );
 
-      /* ── Dev / design tools ── */
+      /* â”€â”€ Dev / design tools â”€â”€ */
       case 'component-library':
         return (
           <ComponentLibraryScreen onBack={goBack} />
@@ -684,18 +690,18 @@ export default function App() {
           <ScreenFlowDocument onBack={goBack} />
         );
 
-      /* ── Reports ── */
+      /* â”€â”€ Reports â”€â”€ */
       case 'monthly-report':
         return <MonthlySessionReportScreen onBack={goBack} />;
 
-      /* ── Data management ── */
+      /* â”€â”€ Data management â”€â”€ */
       case 'export-csv':
         return <ExportCSVScreen onBack={goBack} />;
 
       case 'restore-data':
         return <RestoreDataScreen onBack={goBack} />;
 
-      /* ── Settings extras ── */
+      /* â”€â”€ Settings extras â”€â”€ */
       case 'package-management':
         return (
           <PackageManagementScreen
@@ -709,7 +715,7 @@ export default function App() {
         return (
           <PackageFormScreen
             onBack={goBack}
-            onSave={() => showSuccess('Đã lưu gói học thành công!', goBack)}
+            onSave={() => showSuccess('ÄĂ£ lÆ°u gĂ³i há»c thĂ nh cĂ´ng!', goBack)}
           />
         );
 
@@ -726,7 +732,7 @@ export default function App() {
         return (
           <AddUserScreen
             onBack={goBack}
-            onSave={() => showSuccess('Đã thêm người dùng thành công!', () => navigate('user-management', true))}
+            onSave={() => showSuccess('ÄĂ£ thĂªm ngÆ°á»i dĂ¹ng thĂ nh cĂ´ng!', () => navigate('user-management', true))}
           />
         );
 
@@ -748,7 +754,7 @@ export default function App() {
           />
         );
 
-      /* ══ MEMBER / STUDENT ROLE ══ */
+      /* â•â• MEMBER / STUDENT ROLE â•â• */
       case 'member-dashboard':
         return (
           <MemberDashboard
@@ -782,13 +788,31 @@ export default function App() {
         return (
           <MemberEquipmentRentalScreen
             onBack={goBack}
-            onConfirm={() => showSuccess('?? ghi nh?n y?u c?u thu? ?? t?i s?n!', () => navigate('member-dashboard', true))}
+            onConfirm={() => showSuccess('ÄĂ£ ghi nháº­n yĂªu cáº§u thuĂª Ä‘á»“ táº¡i sĂ¢n!', () => navigate('member-dashboard', true))}
+          />
+        );
+
+      case 'member-membership-overview':
+        return (
+          <MemberMembershipOverviewScreen
+            onBack={goBack}
+            onRenew={() => navigate('member-membership-registration')}
+            onViewPlans={() => navigate('member-membership-registration')}
+          />
+        );
+
+      case 'member-membership-registration':
+        return (
+          <MemberMembershipRegistrationScreen
+            onBack={goBack}
+            onSubmit={() => showSuccess('ÄĂ£ gá»­i yĂªu cáº§u gĂ³i há»™i viĂªn! Admin sáº½ xĂ¡c nháº­n sá»›m.', () => navigate('member-dashboard', true))}
           />
         );
 
       case 'member-package':
         return (
           <MemberPackageScreen
+            onBack={goBack}
             onRenew={() => navigate('member-renew-request')}
           />
         );
@@ -803,7 +827,7 @@ export default function App() {
         return (
           <MemberRenewRequestScreen
             onBack={goBack}
-            onSubmit={() => showSuccess('Yêu cầu gia hạn đã được gửi! Admin sẽ xác nhận sớm.', () => navigate('member-package', true))}
+            onSubmit={() => showSuccess('YĂªu cáº§u gia háº¡n Ä‘Ă£ Ä‘Æ°á»£c gá»­i! Admin sáº½ xĂ¡c nháº­n sá»›m.', () => navigate('member-package', true))}
           />
         );
 
@@ -827,7 +851,7 @@ export default function App() {
     }
   }
 
-  /* ── Tab bar handler ── */
+  /* â”€â”€ Tab bar handler â”€â”€ */
   function handleTabChange(tab: string) {
     const tabMap: Record<string, Screen> = {
       'home':          homeForRole(role),
@@ -843,7 +867,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-muted/30">
 
-      {/* ── Full-width screens (bypass device frame) ── */}
+      {/* â”€â”€ Full-width screens (bypass device frame) â”€â”€ */}
       {currentScreen === 'screen-flow-doc' ? (
         <div className="min-h-screen" style={{ background: '#F7F9FA' }}>
           <ScreenFlowDocument onBack={goBack} />
@@ -853,12 +877,12 @@ export default function App() {
           />
         </div>
       ) : (
-      /* ── Device frame ── */
+      /* â”€â”€ Device frame â”€â”€ */
       <div
         className="max-w-[390px] mx-auto min-h-screen bg-background relative overflow-hidden shadow-2xl"
         style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 8px 40px rgba(0,0,0,0.12)' }}
       >
-        {/* ── Screen with transition ── */}
+        {/* â”€â”€ Screen with transition â”€â”€ */}
         <div
           key={animKey}
           className={`h-screen overflow-y-auto ${animClass}`}
@@ -866,7 +890,7 @@ export default function App() {
           {renderScreen()}
         </div>
 
-        {/* ── Bottom nav ── */}
+        {/* â”€â”€ Bottom nav â”€â”€ */}
         {showNav && (
           <BottomNavigation
             currentTab={activeTab}
@@ -874,7 +898,7 @@ export default function App() {
           />
         )}
 
-        {/* ── Member Bottom nav ── */}
+        {/* â”€â”€ Member Bottom nav â”€â”€ */}
         {showMemberNav && (
           <MemberBottomNavigation
             currentTab={memberTabActive}
@@ -882,12 +906,12 @@ export default function App() {
           />
         )}
 
-        {/* ── Success overlay ── */}
+        {/* â”€â”€ Success overlay â”€â”€ */}
         {successMsg && (
           <SuccessDialog message={successMsg} onClose={onSuccessClose} />
         )}
 
-        {/* ── Prototype Flow Panel ── */}
+        {/* â”€â”€ Prototype Flow Panel â”€â”€ */}
         <PrototypeFlowPanel
           currentScreen={currentScreen as Screen}
           onJump={handleJump}
@@ -897,3 +921,4 @@ export default function App() {
     </div>
   );
 }
+
