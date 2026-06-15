@@ -788,7 +788,7 @@ export default function App() {
         return (
           <MemberEquipmentRentalScreen
             onBack={goBack}
-            onConfirm={() => showSuccess('ÄĂ£ ghi nháº­n yĂªu cáº§u thuĂª Ä‘á»“ táº¡i sĂ¢n!', () => navigate('member-dashboard', true))}
+            onConfirm={() => showSuccess('Đã ghi nhận yêu cầu thuê đồ tại sân!', () => navigate('member-dashboard', true))}
           />
         );
 

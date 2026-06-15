@@ -43,15 +43,16 @@ export function MemberEquipmentRentalScreen({ onBack, onConfirm }: MemberEquipme
   const [selectedIds, setSelectedIds] = useState<string[]>(['racket', 'ball']);
 
   const selectedItems = useMemo(
-    () => RENTAL_ITEMS.filter(item => selectedIds.includes(item.id)),
+    () => RENTAL_ITEMS.filter((item) => selectedIds.includes(item.id)),
     [selectedIds],
   );
 
   function toggleItem(id: string) {
-    setSelectedIds(current => {
+    setSelectedIds((current) => {
       if (current.includes(id)) {
-        return current.filter(itemId => itemId !== id);
+        return current.filter((itemId) => itemId !== id);
       }
+
       return [...current, id];
     });
   }
@@ -135,8 +136,9 @@ export function MemberEquipmentRentalScreen({ onBack, onConfirm }: MemberEquipme
             </div>
 
             <div className="space-y-3">
-              {RENTAL_ITEMS.map(item => {
+              {RENTAL_ITEMS.map((item) => {
                 const selected = selectedIds.includes(item.id);
+
                 return (
                   <button
                     key={item.id}
@@ -190,7 +192,7 @@ export function MemberEquipmentRentalScreen({ onBack, onConfirm }: MemberEquipme
               <p style={{ fontSize: 12, fontWeight: 900, color: '#1F2933' }}>Lưu ý nhanh</p>
             </div>
             <div className="space-y-2">
-              {RENTAL_RULES.map(rule => (
+              {RENTAL_RULES.map((rule) => (
                 <div key={rule} className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: '#0E7C7B' }} />
                   <p style={{ fontSize: 11, color: '#6B7280', lineHeight: 1.5 }}>{rule}</p>
