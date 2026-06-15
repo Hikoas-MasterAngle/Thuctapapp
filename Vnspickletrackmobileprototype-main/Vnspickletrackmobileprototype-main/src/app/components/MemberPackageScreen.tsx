@@ -1,606 +1,342 @@
-/**
- * MemberPackageScreen — VNS PickleTrack
- * Gói học của tôi · Read-only · Học viên / Hội viên
- * Android 390 × 844
- */
-import { useState } from 'react';
 import {
-  BookOpen, Calendar, CheckCircle2, Clock,
-  RefreshCw, AlertTriangle, ChevronRight,
-  Zap, Info, Send, Star, Shield, TrendingUp
+  AlertTriangle,
+  ArrowLeft,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
+  RefreshCw,
+  UserRound,
 } from 'lucide-react';
 
-/* ══════════════════════════════════════════════════════
-   MOCK DATA
-══════════════════════════════════════════════════════ */
-const PACKAGE = {
-  name:      'Gói 12 buổi',
-  total:     12,
-  attended:  5,
-  remaining: 7,
-  startDate: '01/04/2026',
-  coach:     'Coach Nam',
-  class:     'Beginner A',
+type CoursePackage = {
+  name: string;
+  total: number;
+  used: number;
+  remaining: number;
+  startDate: string;
+  className: string;
+  coach: string;
 };
 
-/* ── Status logic ──────────────────────────────────── */
-function getStatus(remaining: number) {
-  if (remaining === 0) return {
-    label: 'Đã hết buổi', color: '#E76F51', bg: 'rgba(231,111,81,0.14)',
-    border: 'rgba(231,111,81,0.32)', dot: '#E76F51',
-    gradient: 'linear-gradient(135deg,#C62828 0%,#E76F51 100%)',
-    shadow: 'rgba(231,111,81,0.40)', cardBg: 'linear-gradient(135deg,#C62828 0%,#E76F51 100%)',
-    alert: true,
-  };
-  if (remaining <= 2) return {
-    label: 'Sắp hết buổi', color: '#E76F51', bg: 'rgba(231,111,81,0.12)',
-    border: 'rgba(231,111,81,0.28)', dot: '#E76F51',
-    gradient: 'linear-gradient(135deg,#C62828 0%,#E76F51 100%)',
-    shadow: 'rgba(231,111,81,0.38)', cardBg: 'linear-gradient(135deg,#BF360C 0%,#E76F51 100%)',
-    alert: true,
-  };
-  return {
-    label: 'Đang hoạt động', color: '#2A9D8F', bg: 'rgba(42,157,143,0.13)',
-    border: 'rgba(42,157,143,0.28)', dot: '#2A9D8F',
-    gradient: 'linear-gradient(135deg,#0E7C7B 0%,#2A9D8F 100%)',
-    shadow: 'rgba(14,124,123,0.32)', cardBg: 'linear-gradient(135deg,#0E7C7B 0%,#2A9D8F 100%)',
-    alert: false,
-  };
-}
+type PackageSuggestion = {
+  id: number;
+  name: string;
+  sessions: number;
+  price: string;
+  description: string;
+  tag?: string;
+};
 
-/* ── Package suggestions ──────────────────────────── */
-const SUGGESTIONS = [
+const CURRENT_PACKAGE: CoursePackage = {
+  name: 'Gói 12 buổi',
+  total: 12,
+  used: 5,
+  remaining: 7,
+  startDate: '01/04/2026',
+  className: 'Beginner A',
+  coach: 'Coach Nam',
+};
+
+const PACKAGE_OPTIONS: PackageSuggestion[] = [
   {
-    id: 1, name: 'Gói 8 buổi',  sessions: 8,  price: '1.600.000đ',
-    priceNum: 1600000, perSession: '200.000đ/buổi',
-    tag: '', highlight: false,
+    id: 1,
+    name: 'Gói 8 buổi',
+    sessions: 8,
+    price: '960.000đ',
+    description: 'Phù hợp khi muốn học đều mỗi tuần.',
   },
   {
-    id: 2, name: 'Gói 12 buổi', sessions: 12, price: '2.400.000đ',
-    priceNum: 2400000, perSession: '200.000đ/buổi',
-    tag: 'Đang dùng', highlight: true,
+    id: 2,
+    name: 'Gói 12 buổi',
+    sessions: 12,
+    price: '1.320.000đ',
+    description: 'Gói đang dùng · cân bằng chi phí và tiến độ học.',
+    tag: 'Đang dùng',
   },
   {
-    id: 3, name: 'Gói 16 buổi', sessions: 16, price: '3.000.000đ',
-    priceNum: 3000000, perSession: '187.500đ/buổi',
-    tag: 'Tiết kiệm nhất', highlight: false,
+    id: 3,
+    name: 'Gói 16 buổi',
+    sessions: 16,
+    price: '1.680.000đ',
+    description: 'Phù hợp khi cần học dày hơn hoặc học bù.',
+    tag: 'Tiết kiệm hơn',
   },
 ];
 
-/* ══════════════════════════════════════════════════════
-   RENEW BOTTOM SHEET  (modal-like overlay)
-══════════════════════════════════════════════════════ */
-interface RenewSheetProps {
-  onClose:  () => void;
-  onSubmit: (pkg: typeof SUGGESTIONS[0]) => void;
-}
-function RenewSheet({ onClose, onSubmit }: RenewSheetProps) {
-  const [selected, setSelected] = useState<number>(2); // default Gói 12
-  const pkg = SUGGESTIONS.find(s => s.id === selected)!;
-
-  return (
-    <div
-      className="absolute inset-0 z-50 flex flex-col justify-end"
-      style={{ background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(3px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="rounded-t-3xl overflow-hidden"
-        style={{ background: 'white', boxShadow: '0 -12px 48px rgba(0,0,0,0.18)' }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.12)' }} />
-        </div>
-
-        <div className="px-5 pb-8">
-          {/* Title */}
-          <div className="flex items-center gap-3 mb-5 mt-2">
-            <div className="flex items-center justify-center rounded-2xl"
-                 style={{ width:42, height:42, background:'rgba(14,124,123,0.10)' }}>
-              <RefreshCw style={{ width:18, height:18, color:'#0E7C7B' }} />
-            </div>
-            <div>
-              <p style={{ fontSize:17, fontWeight:900, color:'#1F2933' }}>Yêu cầu gia hạn</p>
-              <p style={{ fontSize:11, color:'#9CA3AF', fontWeight:500 }}>Chọn gói phù hợp</p>
-            </div>
-          </div>
-
-          {/* Package options */}
-          <div className="space-y-2.5 mb-5">
-            {SUGGESTIONS.map(pkg => {
-              const isSelected = selected === pkg.id;
-              const isCurrent  = pkg.tag === 'Đang dùng';
-              return (
-                <button
-                  key={pkg.id}
-                  onClick={() => setSelected(pkg.id)}
-                  className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-left transition-all active:scale-98"
-                  style={{
-                    border:     isSelected ? '2px solid #0E7C7B' : '1.5px solid rgba(0,0,0,0.09)',
-                    background: isSelected ? 'rgba(14,124,123,0.06)' : 'white',
-                    boxShadow:  isSelected ? '0 4px 16px rgba(14,124,123,0.14)' : 'none',
-                  }}
-                >
-                  {/* Radio */}
-                  <div
-                    className="flex items-center justify-center rounded-full flex-shrink-0"
-                    style={{
-                      width: 22, height: 22,
-                      border: isSelected ? '2px solid #0E7C7B' : '2px solid #D1D5DB',
-                      background: isSelected ? '#0E7C7B' : 'white',
-                    }}
-                  >
-                    {isSelected && (
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'white' }} />
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span style={{ fontSize:14, fontWeight:800, color: isSelected ? '#0E7C7B' : '#1F2933' }}>
-                        {pkg.name}
-                      </span>
-                      {pkg.tag && (
-                        <span
-                          className="px-2 py-0.5 rounded-lg"
-                          style={{
-                            fontSize:   9,
-                            fontWeight: 800,
-                            background: isCurrent ? 'rgba(14,124,123,0.10)' : 'rgba(244,162,97,0.18)',
-                            color:      isCurrent ? '#0E7C7B'               : '#C06030',
-                          }}
-                        >
-                          {pkg.tag}
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ fontSize:11, color:'#9CA3AF', fontWeight:500, marginTop:1 }}>
-                      {pkg.sessions} buổi · {pkg.perSession}
-                    </p>
-                  </div>
-
-                  {/* Price */}
-                  <div className="text-right flex-shrink-0">
-                    <p style={{ fontSize:15, fontWeight:900, color: isSelected ? '#0E7C7B' : '#374151' }}>
-                      {pkg.price}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Notice */}
-          <div
-            className="flex items-start gap-2.5 px-4 py-3.5 rounded-2xl mb-5"
-            style={{ background:'rgba(233,196,106,0.12)', border:'1.5px solid rgba(233,196,106,0.30)' }}
-          >
-            <Info style={{ width:14, height:14, color:'#B8860B', marginTop:1, flexShrink:0 }} />
-            <p style={{ fontSize:11, color:'#7A5C00', fontWeight:500, lineHeight:1.6 }}>
-              Yêu cầu gia hạn sẽ được gửi cho Admin xác nhận.{' '}
-              <strong>Buổi học sẽ được cộng sau khi Admin duyệt</strong>, không phải thanh toán chính thức.
-            </p>
-          </div>
-
-          {/* CTA */}
-          <button
-            onClick={() => onSubmit(pkg)}
-            className="flex items-center justify-center gap-2.5 w-full py-4 rounded-2xl active:opacity-80 transition-all"
-            style={{
-              background: 'linear-gradient(135deg,#0E7C7B 0%,#2A9D8F 100%)',
-              boxShadow:  '0 8px 24px rgba(14,124,123,0.36)',
-            }}
-          >
-            <Send style={{ width:16, height:16, color:'white' }} />
-            <span style={{ fontSize:15, fontWeight:900, color:'white' }}>
-              Gửi yêu cầu — {pkg.name}
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════
-   SUCCESS TOAST
-══════════════════════════════════════════════════════ */
-function SuccessToast({ pkg, onDismiss }: { pkg: typeof SUGGESTIONS[0]; onDismiss: () => void }) {
-  return (
-    <div
-      className="absolute bottom-28 left-4 right-4 z-50 flex items-center gap-3 px-4 py-4 rounded-2xl"
-      style={{
-        background:  'linear-gradient(135deg,#065F5E,#0E7C7B)',
-        boxShadow:   '0 12px 36px rgba(14,124,123,0.45)',
-        border:      '1.5px solid rgba(255,255,255,0.18)',
-      }}
-    >
-      <div className="flex items-center justify-center rounded-xl flex-shrink-0"
-           style={{ width:38, height:38, background:'rgba(255,255,255,0.18)' }}>
-        <CheckCircle2 style={{ width:18, height:18, color:'white' }} />
-      </div>
-      <div className="flex-1">
-        <p style={{ fontSize:13, fontWeight:900, color:'white' }}>Đã gửi yêu cầu gia hạn!</p>
-        <p style={{ fontSize:11, color:'rgba(255,255,255,0.65)', fontWeight:500, marginTop:1 }}>
-          {pkg.name} · Chờ Admin xác nhận
-        </p>
-      </div>
-      <button onClick={onDismiss} className="active:scale-90">
-        <span style={{ fontSize:18, color:'rgba(255,255,255,0.5)', fontWeight:300 }}>×</span>
-      </button>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════
-   MAIN COMPONENT
-══════════════════════════════════════════════════════ */
-interface MemberPackageScreenProps {
-  onNavigate?: (screen: string) => void;
-}
-
-export function MemberPackageScreen({ onNavigate }: MemberPackageScreenProps) {
-  const [showSheet,   setShowSheet]   = useState(false);
-  const [sentPkg,     setSentPkg]     = useState<typeof SUGGESTIONS[0] | null>(null);
-
-  const status   = getStatus(PACKAGE.remaining);
-  const progress = PACKAGE.attended / PACKAGE.total;   // used / total
-
-  function handleSubmit(pkg: typeof SUGGESTIONS[0]) {
-    setShowSheet(false);
-    setSentPkg(pkg);
-    setTimeout(() => setSentPkg(null), 4200);
+function getStatus(remaining: number) {
+  if (remaining <= 0) {
+    return {
+      label: 'Đã hết buổi',
+      color: '#E76F51',
+      background: 'linear-gradient(135deg,#C62828 0%,#E76F51 100%)',
+      soft: 'rgba(231,111,81,0.12)',
+      border: 'rgba(231,111,81,0.24)',
+      alert: 'Bạn đã dùng hết số buổi. Hãy gửi yêu cầu gia hạn để tiếp tục học.',
+    };
   }
 
+  if (remaining <= 3) {
+    return {
+      label: 'Sắp hết buổi',
+      color: '#E8832A',
+      background: 'linear-gradient(135deg,#D96B25 0%,#F4A261 100%)',
+      soft: 'rgba(244,162,97,0.14)',
+      border: 'rgba(244,162,97,0.28)',
+      alert: `Chỉ còn ${remaining} buổi. Đây là lúc phù hợp để gửi yêu cầu gia hạn.`,
+    };
+  }
+
+  return {
+    label: 'Đang hoạt động',
+    color: '#0E7C7B',
+    background: 'linear-gradient(135deg,#0E7C7B 0%,#2A9D8F 100%)',
+    soft: 'rgba(14,124,123,0.12)',
+    border: 'rgba(14,124,123,0.18)',
+    alert: 'Gói học vẫn còn hiệu lực. Bạn có thể chủ động xem trước các gói tiếp theo.',
+  };
+}
+
+interface MemberPackageScreenProps {
+  onBack?: () => void;
+  onRenew?: () => void;
+}
+
+export function MemberPackageScreen({ onBack, onRenew }: MemberPackageScreenProps) {
+  const status = getStatus(CURRENT_PACKAGE.remaining);
+  const progress = CURRENT_PACKAGE.used / CURRENT_PACKAGE.total;
+
   return (
-    <div className="relative flex flex-col min-h-screen" style={{ background: '#F0F4F5' }}>
-
-      {/* ════════════════════════════════════════
-          HEADER
-      ════════════════════════════════════════ */}
+    <div className="flex min-h-screen flex-col" style={{ background: '#F0F4F5' }}>
       <div
-        className="relative overflow-hidden flex-shrink-0"
-        style={{ background:'linear-gradient(148deg,#032C2C 0%,#053E3E 28%,#075E5D 58%,#0E7C7B 82%,#1A8E87 100%)' }}
+        className="relative overflow-hidden"
+        style={{ background: 'linear-gradient(148deg,#032C2C 0%,#053E3E 30%,#075E5D 60%,#0E7C7B 85%,#1A8E87 100%)' }}
       >
-        <div className="absolute pointer-events-none" style={{ top:-40,right:-30,width:170,height:170,borderRadius:'50%',background:'rgba(255,255,255,0.042)' }} />
-        <div className="absolute pointer-events-none" style={{ top:14, right:50, width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,0.028)' }} />
-        <div className="absolute pointer-events-none" style={{ bottom:-18,left:-14,width:120,height:120,borderRadius:'50%',background:'rgba(42,157,143,0.09)' }} />
-
+        <div
+          className="absolute pointer-events-none"
+          style={{ top: -24, right: -12, width: 144, height: 144, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}
+        />
         <div className="relative px-5 pt-14 pb-6">
-          <p style={{ fontSize:11, color:'rgba(255,255,255,0.48)', fontWeight:700, letterSpacing:'0.06em' }}>
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <button
+              onClick={onBack}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl active:scale-95 transition-transform"
+              style={{ background: 'rgba(255,255,255,0.13)', border: '1px solid rgba(255,255,255,0.16)' }}
+            >
+              <ArrowLeft style={{ width: 18, height: 18, color: 'white' }} />
+            </button>
+
+            <div
+              className="flex h-11 w-11 items-center justify-center rounded-2xl"
+              style={{ background: 'rgba(255,255,255,0.13)', border: '1px solid rgba(255,255,255,0.16)' }}
+            >
+              <BookOpen style={{ width: 18, height: 18, color: 'white' }} />
+            </div>
+          </div>
+
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.56)', fontWeight: 700, letterSpacing: '0.05em' }}>
             HỘI VIÊN
           </p>
-          <h1 style={{ fontSize:24, fontWeight:900, color:'white', letterSpacing:'-0.5px', marginTop:2 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', lineHeight: 1.1, marginTop: 3 }}>
             Gói học của tôi
           </h1>
         </div>
       </div>
 
-      {/* ════════════════════════════════════════
-          SCROLLABLE BODY
-      ════════════════════════════════════════ */}
-      <div className="flex-1 overflow-y-auto pb-28">
-        <div className="px-4 pt-4 space-y-4">
-
-          {/* ─────────────────────────────────────────
-              CURRENT PACKAGE CARD
-          ───────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto pb-24">
+        <div className="space-y-4 px-4 pt-4">
           <div
-            className="rounded-3xl overflow-hidden"
-            style={{
-              background: status.cardBg,
-              boxShadow:  `0 12px 40px ${status.shadow}`,
-            }}
+            className="overflow-hidden rounded-[30px]"
+            style={{ background: status.background, boxShadow: '0 18px 42px rgba(14,124,123,0.18)' }}
           >
-            {/* Card content */}
-            <div className="px-5 pt-5 pb-5">
-
-              {/* Top row: label + status badge */}
-              <div className="flex items-start justify-between mb-1">
+            <div className="p-5">
+              <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
-                  <p style={{ fontSize:11, color:'rgba(255,255,255,0.52)', fontWeight:700, letterSpacing:'0.06em' }}>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.74)', fontWeight: 800, letterSpacing: '0.04em' }}>
                     GÓI HIỆN TẠI
                   </p>
-                  <p style={{ fontSize:22, fontWeight:900, color:'white', letterSpacing:'-0.4px', marginTop:2 }}>
-                    {PACKAGE.name}
+                  <p style={{ fontSize: 18, fontWeight: 900, color: 'white', marginTop: 4 }}>
+                    {CURRENT_PACKAGE.name}
+                  </p>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.88)', fontWeight: 600, marginTop: 4 }}>
+                    Bắt đầu từ {CURRENT_PACKAGE.startDate}
                   </p>
                 </div>
+
                 <div
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-2xl flex-shrink-0 mt-1"
-                  style={{ background:'rgba(255,255,255,0.18)', border:'1.5px solid rgba(255,255,255,0.28)' }}
+                  className="rounded-2xl px-4 py-2"
+                  style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.20)' }}
                 >
-                  <div className="w-2 h-2 rounded-full" style={{ background:'white' }} />
-                  <span style={{ fontSize:11, fontWeight:900, color:'white' }}>{status.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'white' }}>{status.label}</span>
                 </div>
               </div>
 
-              {/* Start date */}
-              <div className="flex items-center gap-1.5 mb-5">
-                <Calendar style={{ width:12, height:12, color:'rgba(255,255,255,0.55)' }} />
-                <span style={{ fontSize:11, color:'rgba(255,255,255,0.55)', fontWeight:600 }}>
-                  Ngày bắt đầu: {PACKAGE.startDate}
-                </span>
-              </div>
-
-              {/* Stats row */}
               <div
-                className="grid grid-cols-3 gap-0 rounded-2xl overflow-hidden mb-5"
-                style={{ background:'rgba(0,0,0,0.14)' }}
+                className="grid grid-cols-3 overflow-hidden rounded-[24px]"
+                style={{ background: 'rgba(0,0,0,0.12)' }}
               >
                 {[
-                  { label:'Tổng buổi', value: PACKAGE.total,     unit:'buổi', dimmer: false },
-                  { label:'Đã học',    value: PACKAGE.attended,  unit:'buổi', dimmer: false },
-                  { label:'Còn lại',   value: PACKAGE.remaining, unit:'buổi', dimmer: false },
-                ].map((stat, i) => (
+                  { value: CURRENT_PACKAGE.total, unit: 'buổi', label: 'Tổng buổi' },
+                  { value: CURRENT_PACKAGE.used, unit: 'buổi', label: 'Đã học' },
+                  { value: CURRENT_PACKAGE.remaining, unit: 'buổi', label: 'Còn lại' },
+                ].map((item, index) => (
                   <div
-                    key={i}
-                    className="flex flex-col items-center justify-center py-4"
-                    style={{
-                      borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none',
-                    }}
+                    key={item.label}
+                    className="px-3 py-5 text-center"
+                    style={{ borderLeft: index === 0 ? 'none' : '1px solid rgba(255,255,255,0.08)' }}
                   >
-                    <span style={{ fontSize:30, fontWeight:900, color:'white', lineHeight:1, letterSpacing:'-1.5px' }}>
-                      {stat.value}
-                    </span>
-                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.55)', fontWeight:600, marginTop:3 }}>
-                      {stat.unit}
-                    </span>
-                    <span style={{ fontSize:9, color:'rgba(255,255,255,0.38)', fontWeight:700, marginTop:2, letterSpacing:'0.04em' }}>
-                      {stat.label.toUpperCase()}
-                    </span>
+                    <p style={{ fontSize: 18, fontWeight: 900, color: 'white' }}>{item.value}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.84)', fontWeight: 700, marginTop: 2 }}>{item.unit}</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.56)', fontWeight: 700, marginTop: 8 }}>{item.label}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Progress bar */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span style={{ fontSize:10, color:'rgba(255,255,255,0.50)', fontWeight:700, letterSpacing:'0.04em' }}>
-                    TIẾN ĐỘ SỬ DỤNG
-                  </span>
-                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.72)', fontWeight:800 }}>
-                    {PACKAGE.attended}/{PACKAGE.total} buổi đã dùng
+              <div className="mt-5">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 800 }}>TIẾN ĐỘ SỬ DỤNG</span>
+                  <span style={{ fontSize: 12, color: 'white', fontWeight: 900 }}>
+                    {CURRENT_PACKAGE.used}/{CURRENT_PACKAGE.total} buổi đã dùng
                   </span>
                 </div>
-
-                {/* Track */}
-                <div className="relative rounded-full overflow-hidden" style={{ height:10, background:'rgba(255,255,255,0.16)' }}>
+                <div className="h-3 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.18)' }}>
                   <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width:      `${progress * 100}%`,
-                      background: 'rgba(255,255,255,0.72)',
-                    }}
+                    className="h-full rounded-full"
+                    style={{ width: `${progress * 100}%`, background: 'rgba(255,255,255,0.92)' }}
                   />
                 </div>
-
-                {/* Ticks */}
-                <div className="flex justify-between mt-1.5">
-                  <span style={{ fontSize:9, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>0</span>
-                  <span style={{ fontSize:9, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>{Math.round(PACKAGE.total / 2)}</span>
-                  <span style={{ fontSize:9, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>{PACKAGE.total}</span>
+                <div className="mt-2 flex justify-between" style={{ fontSize: 10, color: 'rgba(255,255,255,0.60)', fontWeight: 700 }}>
+                  <span>0</span>
+                  <span>{CURRENT_PACKAGE.used}</span>
+                  <span>{CURRENT_PACKAGE.total}</span>
                 </div>
               </div>
             </div>
 
-            {/* Alert banner for low/empty */}
-            {status.alert && (
-              <div
-                className="flex items-center gap-3 px-5 py-3.5"
-                style={{ background:'rgba(0,0,0,0.20)', borderTop:'1px solid rgba(255,255,255,0.12)' }}
-              >
-                <AlertTriangle style={{ width:15, height:15, color:'rgba(255,255,255,0.85)', flexShrink:0 }} />
-                <p style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontWeight:600, lineHeight:1.5 }}>
-                  {PACKAGE.remaining === 0
-                    ? 'Bạn đã hết buổi học. Hãy yêu cầu gia hạn để tiếp tục.'
-                    : `Chỉ còn ${PACKAGE.remaining} buổi! Hãy gia hạn để không bị gián đoạn.`}
-                </p>
-              </div>
-            )}
+            <div className="flex items-start gap-3 px-5 py-4" style={{ background: 'rgba(0,0,0,0.12)' }}>
+              <AlertTriangle style={{ width: 18, height: 18, color: 'white', marginTop: 2, flexShrink: 0 }} />
+              <p style={{ fontSize: 12, lineHeight: 1.6, color: 'white', fontWeight: 700 }}>
+                {status.alert}
+              </p>
+            </div>
           </div>
 
-          {/* ─────────────────────────────────────────
-              RENEW CTA BUTTON
-          ───────────────────────────────────────── */}
           <button
-            onClick={() => setShowSheet(true)}
-            className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl active:scale-98 transition-all"
+            onClick={onRenew}
+            className="flex w-full items-center justify-center gap-3 rounded-[26px] px-5 py-5 active:scale-[0.99] transition-all"
             style={{
               background: 'linear-gradient(135deg,#0E7C7B 0%,#2A9D8F 100%)',
-              boxShadow:  '0 8px 28px rgba(14,124,123,0.32)',
-              border:     '1.5px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 14px 30px rgba(14,124,123,0.22)',
             }}
           >
             <div
-              className="flex items-center justify-center rounded-xl"
-              style={{ width:34, height:34, background:'rgba(255,255,255,0.18)' }}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl"
+              style={{ background: 'rgba(255,255,255,0.18)' }}
             >
-              <RefreshCw style={{ width:16, height:16, color:'white' }} />
+              <RefreshCw style={{ width: 18, height: 18, color: 'white' }} />
             </div>
-            <span style={{ fontSize:16, fontWeight:900, color:'white' }}>
-              Yêu cầu gia hạn gói
-            </span>
-            <ChevronRight style={{ width:18, height:18, color:'rgba(255,255,255,0.6)' }} />
+            <div className="flex-1 text-left">
+              <p style={{ fontSize: 17, fontWeight: 900, color: 'white' }}>Yêu cầu gia hạn gói</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.78)', fontWeight: 600, marginTop: 2 }}>
+                Gửi yêu cầu mua thêm buổi học cho Admin
+              </p>
+            </div>
+            <ChevronRight style={{ width: 18, height: 18, color: 'rgba(255,255,255,0.82)' }} />
           </button>
 
-          {/* ─────────────────────────────────────────
-              PACKAGE SUGGESTIONS
-          ───────────────────────────────────────── */}
           <div>
-            {/* Section header */}
-            <div className="flex items-center gap-2.5 mb-3">
-              <div
-                className="flex items-center justify-center rounded-xl"
-                style={{ width:28, height:28, background:'rgba(14,124,123,0.10)' }}
-              >
-                <BookOpen style={{ width:13, height:13, color:'#0E7C7B' }} />
-              </div>
-              <p style={{ fontSize:12, fontWeight:900, color:'#1F2933', letterSpacing:'0.04em' }}>
-                CÁC GÓI HỌC
-              </p>
+            <div className="mb-3 flex items-center justify-between">
+              <p style={{ fontSize: 12, color: '#374151', fontWeight: 800, letterSpacing: '0.04em' }}>CÁC GÓI HỌC</p>
+              <span style={{ fontSize: 11, color: '#0E7C7B', fontWeight: 800 }}>{PACKAGE_OPTIONS.length} lựa chọn</span>
             </div>
 
             <div className="space-y-3">
-              {SUGGESTIONS.map((pkg) => {
-                const isCurrent = pkg.id === 2;
-                const isBest    = pkg.id === 3;
-                return (
-                  <div
-                    key={pkg.id}
-                    className="bg-white rounded-3xl overflow-hidden"
-                    style={{
-                      border:    isCurrent ? '2px solid rgba(14,124,123,0.35)' : '1.5px solid rgba(0,0,0,0.07)',
-                      boxShadow: isCurrent ? '0 6px 24px rgba(14,124,123,0.12)' : '0 2px 10px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    {/* Accent top bar for current */}
-                    {isCurrent && (
-                      <div style={{ height:3, background:'linear-gradient(90deg,#0E7C7B 0%,#2A9D8F 100%)' }} />
-                    )}
-
-                    <div className="flex items-center gap-4 px-5 py-4">
-                      {/* Icon */}
+              {PACKAGE_OPTIONS.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="rounded-[28px] bg-white p-4"
+                  style={{ border: '1.5px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(0,0,0,0.04)' }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
                       <div
-                        className="flex items-center justify-center rounded-2xl flex-shrink-0"
-                        style={{
-                          width:  50, height:50,
-                          background: isCurrent ? 'linear-gradient(135deg,#0E7C7B,#2A9D8F)'
-                                    : isBest    ? 'rgba(244,162,97,0.12)'
-                                    :             'rgba(0,0,0,0.06)',
-                          boxShadow: isCurrent ? '0 6px 16px rgba(14,124,123,0.28)' : 'none',
-                        }}
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                        style={{ background: pkg.id === 2 ? 'rgba(14,124,123,0.12)' : 'rgba(0,0,0,0.05)' }}
                       >
-                        <span style={{
-                          fontSize:   22, fontWeight:900, lineHeight:1,
-                          color:      isCurrent ? 'white' : isBest ? '#E8832A' : '#9CA3AF',
-                        }}>
-                          {pkg.sessions}
-                        </span>
+                        <BookOpen style={{ width: 20, height: 20, color: pkg.id === 2 ? '#0E7C7B' : '#6B7280' }} />
                       </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p style={{ fontSize:16, fontWeight:900, color: isCurrent ? '#0E7C7B' : '#1F2933' }}>
-                            {pkg.name}
-                          </p>
+                          <p style={{ fontSize: 15, fontWeight: 900, color: '#1F2933' }}>{pkg.name}</p>
                           {pkg.tag && (
                             <span
-                              className="px-2 py-1 rounded-xl"
+                              className="rounded-lg px-2 py-0.5"
                               style={{
-                                fontSize:  9, fontWeight:800,
-                                background: isCurrent ? 'rgba(14,124,123,0.10)' : 'rgba(244,162,97,0.18)',
-                                color:      isCurrent ? '#0E7C7B'               : '#C06030',
+                                fontSize: 9,
+                                fontWeight: 900,
+                                color: pkg.id === 2 ? '#0E7C7B' : '#C06030',
+                                background: pkg.id === 2 ? 'rgba(14,124,123,0.10)' : 'rgba(244,162,97,0.16)',
                               }}
                             >
-                              {isCurrent ? '✓ ' : '★ '}{pkg.tag}
+                              {pkg.tag}
                             </span>
                           )}
                         </div>
-                        <p style={{ fontSize:12, color:'#9CA3AF', fontWeight:500, marginTop:2 }}>
-                          {pkg.sessions} buổi · {pkg.perSession}
+                        <p style={{ fontSize: 11, color: '#6B7280', fontWeight: 700, marginTop: 2 }}>
+                          {pkg.sessions} buổi · {pkg.description}
                         </p>
-                      </div>
-
-                      {/* Price */}
-                      <div className="text-right flex-shrink-0">
-                        <p style={{
-                          fontSize:   17, fontWeight:900,
-                          color:      isCurrent ? '#0E7C7B' : '#1F2933',
-                          letterSpacing: '-0.3px',
-                        }}>
-                          {pkg.price}
-                        </p>
-                        {isBest && (
-                          <p style={{ fontSize:9, color:'#E8832A', fontWeight:700, marginTop:1 }}>
-                            Rẻ hơn 6%
-                          </p>
-                        )}
                       </div>
                     </div>
+                    <div className="text-right">
+                      <p style={{ fontSize: 15, fontWeight: 900, color: '#0E7C7B' }}>{pkg.price}</p>
+                    </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* ─────────────────────────────────────────
-              NOTE CARD
-          ───────────────────────────────────────── */}
           <div
-            className="flex items-start gap-3.5 px-4 py-4 rounded-2xl"
-            style={{
-              background: 'rgba(233,196,106,0.10)',
-              border:     '1.5px solid rgba(233,196,106,0.32)',
-            }}
+            className="rounded-[28px] bg-white p-4"
+            style={{ border: `1.5px solid ${status.border}`, boxShadow: '0 4px 14px rgba(0,0,0,0.04)' }}
           >
-            <div
-              className="flex items-center justify-center rounded-xl flex-shrink-0 mt-0.5"
-              style={{ width:34, height:34, background:'rgba(233,196,106,0.22)' }}
-            >
-              <Shield style={{ width:15, height:15, color:'#B8860B' }} />
+            <div className="mb-3 flex items-center gap-2">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-2xl"
+                style={{ background: status.soft }}
+              >
+                <CheckCircle2 style={{ width: 18, height: 18, color: status.color }} />
+              </div>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 900, color: '#1F2933' }}>Thông tin đang áp dụng</p>
+                <p style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>Giữ đúng flow khóa học hiện tại</p>
+              </div>
             </div>
-            <div>
-              <p style={{ fontSize:12, fontWeight:800, color:'#7A5C00', marginBottom:4 }}>
-                Lưu ý quan trọng
-              </p>
-              <ul style={{ fontSize:11, color:'#7A5C00', fontWeight:500, lineHeight:1.8 }}>
-                <li>• Yêu cầu gia hạn sẽ được gửi cho Admin xác nhận.</li>
-                <li>• Buổi học được cộng sau khi Admin duyệt.</li>
-                <li>• Đây không phải thanh toán chính thức.</li>
-                <li>• Liên hệ Coach nếu cần hỗ trợ thêm.</li>
-              </ul>
+
+            <div className="grid gap-2">
+              <div className="flex items-center gap-2 rounded-2xl px-3 py-3" style={{ background: '#F8FAFB' }}>
+                <CalendarDays style={{ width: 14, height: 14, color: '#0E7C7B' }} />
+                <span style={{ fontSize: 12, color: '#4B5563', fontWeight: 700 }}>
+                  Lớp đang học: {CURRENT_PACKAGE.className}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 rounded-2xl px-3 py-3" style={{ background: '#F8FAFB' }}>
+                <UserRound style={{ width: 14, height: 14, color: '#0E7C7B' }} />
+                <span style={{ fontSize: 12, color: '#4B5563', fontWeight: 700 }}>
+                  Coach phụ trách: {CURRENT_PACKAGE.coach}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 rounded-2xl px-3 py-3" style={{ background: '#F8FAFB' }}>
+                <Clock3 style={{ width: 14, height: 14, color: '#0E7C7B' }} />
+                <span style={{ fontSize: 12, color: '#4B5563', fontWeight: 700 }}>
+                  Gia hạn là gửi yêu cầu, Admin sẽ xác nhận sau.
+                </span>
+              </div>
             </div>
           </div>
-
-          {/* ─────────────────────────────────────────
-              CLASS INFO strip
-          ───────────────────────────────────────── */}
-          <div
-            className="flex items-center gap-4 px-4 py-3.5 rounded-2xl"
-            style={{ background:'rgba(14,124,123,0.07)', border:'1.5px solid rgba(14,124,123,0.14)' }}
-          >
-            <div
-              className="flex items-center justify-center rounded-xl flex-shrink-0"
-              style={{ width:36, height:36, background:'rgba(14,124,123,0.12)' }}
-            >
-              <TrendingUp style={{ width:16, height:16, color:'#0E7C7B' }} />
-            </div>
-            <div className="flex-1">
-              <p style={{ fontSize:13, fontWeight:800, color:'#0E7C7B' }}>{PACKAGE.class}</p>
-              <p style={{ fontSize:11, color:'#6B7280', fontWeight:500, marginTop:1 }}>
-                {PACKAGE.coach} · Thứ 3 & Thứ 6 · 18:00 – 19:30
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ background:'#2A9D8F' }} />
-              <span style={{ fontSize:10, fontWeight:700, color:'#2A9D8F' }}>Đang học</span>
-            </div>
-          </div>
-
         </div>
       </div>
-
-      {/* ════════════════════════════════════════
-          RENEW BOTTOM SHEET
-      ════════════════════════════════════════ */}
-      {showSheet && (
-        <RenewSheet
-          onClose={() => setShowSheet(false)}
-          onSubmit={handleSubmit}
-        />
-      )}
-
-      {/* ════════════════════════════════════════
-          SUCCESS TOAST
-      ════════════════════════════════════════ */}
-      {sentPkg && (
-        <SuccessToast pkg={sentPkg} onDismiss={() => setSentPkg(null)} />
-      )}
-
     </div>
   );
 }
